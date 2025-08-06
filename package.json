@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
+    "start": "node build/server.js",
     "build": "tsc",
     "test": "jest --config jest.config.ts --detectOpenHandles --coverage --maxWorkers=1",
     "postinstall": "prisma generate"
