@@ -5,7 +5,8 @@
   "main": "src/server.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest --config jest.config.ts --detectOpenHandles --coverage --maxWorkers=1"
+    "test": "jest --config jest.config.ts --detectOpenHandles --coverage --maxWorkers=1",
+    "postinstall": "prisma generate"
   },
   "keywords": [
     "decorators",
@@ -33,5 +34,6 @@
     "prisma": "^6.13.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2"
-  }
+  },
+  
 }
