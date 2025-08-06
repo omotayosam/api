@@ -1,0 +1,350 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum definitions
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum SportType {
+  BASKETBALL
+  FOOTBALL
+  ATHLETICS
+  WRESTLING
+  BOXING
+}
+
+enum TeamSportType {
+  BASKETBALL
+  FOOTBALL
+}
+
+enum IndividualSportType {
+  ATHLETICS
+  WRESTLING
+  BOXING
+}
+
+enum EventStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+  CANCELED
+  SUSPENDED
+}
+
+enum SeasonType {
+  SPRING
+  FALL
+  SUMMER
+  INDOOR
+  OUTDOOR
+  REGULAR
+  PLAYOFF
+}
+
+enum GamedayStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+// Core Models
+model Sport {
+  sportId     Int         @id @default(autoincrement()) @map("sport_id")
+  name        SportType   @unique
+  isTeamSport Boolean     @map("is_team_sport")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  
+  // Relations
+  disciplines Discipline[]
+  positions   Position[]
+  teams       Team[]
+  events      Event[]
+  
+  @@map("sports")
+}
+
+model Team {
+  teamId    Int      @id @default(autoincrement()) @map("team_id")
+  code      String   @unique
+  name      String
+  sportId   Int      @map("sport_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  sport     Sport      @relation(fields: [sportId], references: [sportId])
+  athletes  Athlete[]
+  
+  @@index([sportId])
+  @@map("teams")
+}
+
+model Position {
+  positionId  Int     @id @default(autoincrement()) @map("position_id")
+  name        String
+  code        String
+  sportId     Int     @map("sport_id")
+  description String?
+  
+  // Relations
+  sport    Sport     @relation(fields: [sportId], references: [sportId])
+  athletes Athlete[]
+  
+  @@unique([code, sportId])
+  @@index([sportId])
+  @@map("positions")
+}
+
+model Discipline {
+  disciplineId Int     @id @default(autoincrement()) @map("discipline_id")
+  name         String
+  code         String
+  sportId      Int     @map("sport_id")
+  description  String?
+  unit         String? // e.g., "seconds", "meters", "points"
+  
+  // Relations
+  sport        Sport                @relation(fields: [sportId], references: [sportId])
+  athletes     AthleteDiscipline[]
+  performances Performance[]
+  
+  @@unique([code, sportId])
+  @@index([sportId])
+  @@map("disciplines")
+}
+
+model Athlete {
+  athleteId    Int       @id @default(autoincrement()) @map("athlete_id")
+  code         String    @unique
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  teamCode     String?   @map("team_code")
+  dateOfBirth  DateTime  @map("date_of_birth")
+  nationality  String
+  gender       Gender
+  height       Int       // in cm
+  weight       Float     // in kg
+  bio          String?
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  
+  // Team sports specific
+  positionId   Int?      @map("position_id")
+  
+  // Relations
+  team         Team?                @relation(fields: [teamCode], references: [code])
+  position     Position?            @relation(fields: [positionId], references: [positionId])
+  disciplines  AthleteDiscipline[]
+  performances Performance[]
+  
+  @@index([teamCode])
+  @@index([isActive])
+  @@index([code])
+  @@map("athletes")
+}
+
+// Junction table for athletes and their disciplines (for individual sports)
+model AthleteDiscipline {
+  id           Int  @id @default(autoincrement())
+  athleteId    Int  @map("athlete_id")
+  disciplineId Int  @map("discipline_id")
+  currentRank  Int? @map("current_rank")
+  
+  // Relations
+  athlete    Athlete    @relation(fields: [athleteId], references: [athleteId], onDelete: Cascade)
+  discipline Discipline @relation(fields: [disciplineId], references: [disciplineId], onDelete: Cascade)
+  
+  @@unique([athleteId, disciplineId])
+  @@index([disciplineId, currentRank])
+  @@map("athlete_disciplines")
+}
+
+model Season {
+  seasonId   Int        @id @default(autoincrement()) @map("season_id")
+  name       String     @unique
+  seasonType SeasonType @map("season_type")
+  startYear  Int        @map("start_year")
+  endYear    Int        @map("end_year")
+  isActive   Boolean    @default(false) @map("is_active")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  
+  events     Event[]
+  gamedays   Gameday[]
+  
+  @@index([isActive])
+  @@index([startYear, endYear])
+  @@map("seasons")
+}
+
+model Gameday {
+  gamedayId    Int       @id @default(autoincrement()) @map("gameday_id")
+  name         String  
+  gameNumber   Int?      @map("game_number") // e.g., Week 1, Week 2
+  finished     Boolean   @default(false)
+  isPrevious   Boolean   @default(false) @map("is_previous")
+  isCurrent    Boolean   @default(false) @map("is_current")
+  isNext       Boolean   @default(false) @map("is_next")
+  seasonId     Int       @map("season_id")
+  scheduledDate DateTime? @map("scheduled_date")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  events       Event[]
+  season       Season    @relation(fields: [seasonId], references: [seasonId])
+  
+  @@index([seasonId])
+  @@index([isCurrent])
+  @@index([isNext])
+  @@map("gamedays")
+}
+
+model Venue {
+  venueId   Int     @id @default(autoincrement()) @map("venue_id")
+  name      String
+  address   String?
+  city      String?
+  capacity  Int?
+  isHome    Boolean @default(false) @map("is_home")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  events    Event[]
+  
+  @@map("venues")
+}
+
+model Event {
+  eventId      Int         @id @default(autoincrement()) @map("event_id")
+  name         String
+  code         String      @unique
+  sportId      Int         @map("sport_id")
+  year         Int
+  seasonId     Int         @map("season_id")
+  gamedayId    Int         @map("gameday_id")
+  venueId      Int?        @map("venue_id")
+  gender       Gender?     // if gender-specific
+  startDate    DateTime    @map("start_date")
+  endDate      DateTime?   @map("end_date")
+  location     String?     // fallback if no venue
+  description  String?
+  isActive     Boolean     @default(true) @map("is_active")
+  status       EventStatus @default(SCHEDULED)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  
+  // Relations
+  sport        Sport         @relation(fields: [sportId], references: [sportId])
+  season       Season        @relation(fields: [seasonId], references: [seasonId])
+  gameday      Gameday       @relation(fields: [gamedayId], references: [gamedayId])
+  venue        Venue?        @relation(fields: [venueId], references: [venueId])
+  performances Performance[]
+  
+  @@index([sportId])
+  @@index([seasonId])
+  @@index([gamedayId])
+  @@index([status])
+  @@index([startDate])
+  @@map("events")
+}
+
+model Performance {
+  performanceId Int      @id @default(autoincrement()) @map("performance_id")
+  athleteId     Int      @map("athlete_id")
+  eventId       Int      @map("event_id")
+  disciplineId  Int?     @map("discipline_id") // for individual sports
+  date          DateTime
+  
+  // Common performance fields
+  position      Int?     // final position/rank (1st, 2nd, etc.)
+  points        Float?   // general points scored
+  
+  // Track and Field specific
+  time          Float?   // in seconds
+  distance      Float?   // in meters
+  height        Float?   // in meters (for high jump, pole vault)
+  
+  // Team sports common
+  minutesPlayed Int?     @map("minutes_played")
+  
+  // Football specific
+  goalsScored   Int?     @map("goals_scored")
+  goalsConceded Int?     @map("goals_conceded")
+  yellowCards   Int?     @map("yellow_cards")
+  redCards      Int?     @map("red_cards")
+  assists       Int?
+  saves         Int?     // for goalkeepers
+  
+  // Basketball specific
+  twoPoints     Int?     @map("two_points")
+  threePoints   Int?     @map("three_points")
+  freeThrows    Int?     @map("free_throws")
+  fieldGoals    Int?     @map("field_goals")
+  rebounds      Int?
+  steals        Int?
+  blocks        Int?
+  turnovers     Int?
+  
+  // Wrestling specific
+  wins          Int?
+  losses        Int?
+  pins          Int?
+  technicalFalls Int?    @map("technical_falls")
+  decisions     Int?
+  
+  // Boxing specific
+  rounds        Int?
+  knockouts     Int?
+  knockdowns    Int?
+  punchesLanded Int?     @map("punches_landed")
+  punchesThrown Int?     @map("punches_thrown")
+  
+  // Additional fields
+  notes         String?
+  isPersonalBest Boolean @default(false) @map("is_personal_best")
+  isSeasonBest   Boolean @default(false) @map("is_season_best")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  athlete    Athlete     @relation(fields: [athleteId], references: [athleteId], onDelete: Cascade)
+  event      Event       @relation(fields: [eventId], references: [eventId], onDelete: Cascade)
+  discipline Discipline? @relation(fields: [disciplineId], references: [disciplineId])
+  
+  @@index([athleteId, eventId])
+  @@index([eventId])
+  @@index([date])
+  @@index([isPersonalBest])
+  @@index([isSeasonBest])
+  @@map("performances")
+}
+
+// Additional reference tables
+model University {
+  universityId Int      @id @default(autoincrement()) @map("university_id")
+  name         String   @unique
+  code         String   @unique
+  location     String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  @@map("universities")
+}
+
