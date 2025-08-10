@@ -28,7 +28,7 @@ export const Main = () => {
 
     application.use(
         cors({
-            origin: origins,
+            origin: true, // Allow all origins for now
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
             credentials: false,
