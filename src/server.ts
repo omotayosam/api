@@ -34,9 +34,7 @@ export const Main = () => {
             credentials: false,
         })
     );
-    // Express 5 uses path-to-regexp v6, which doesn't accept '*' patterns.
-    // Use a regex-like catch-all instead.
-    application.options('/(.*)', cors());
+
 
     // Serve static avatars whether running from src or build
     const avatarsPath = path.join(__dirname, '../avatars');
