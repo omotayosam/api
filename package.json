@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "start": "node build/server.ts",
+    "start": "node build/server.js",
     "prestart": "prisma migrate deploy",
     "build": "tsc",
     "migrate:deploy": "prisma migrate deploy",
