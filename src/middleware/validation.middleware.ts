@@ -10,7 +10,13 @@ import { AppError } from './error';
 export const validateRequest = (schema: { body?: z.ZodTypeAny; query?: z.ZodTypeAny; params?: z.ZodTypeAny }) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
+            // Skip validation for OPTIONS requests (CORS preflight)
+            if (req.method === 'OPTIONS') {
+                return next();
+            }
+
             console.log('Incoming request body:', JSON.stringify(req.body, null, 2));
+
             if (schema.body) {
                 req.body = await schema.body.parseAsync(req.body);
             }
@@ -23,12 +29,10 @@ export const validateRequest = (schema: { body?: z.ZodTypeAny; query?: z.ZodType
             next();
         } catch (error) {
             if (error instanceof z.ZodError) {
-                // Change 'error.errors' to 'error.issues'
                 console.log('Validation errors:', JSON.stringify(error.issues, null, 2));
 
                 const errorDetails: Record<string, string> = {};
 
-                // Change 'error.errors' to 'error.issues'
                 error.issues.forEach((err) => {
                     const key = err.path.join('.');
                     errorDetails[key] = err.message;
