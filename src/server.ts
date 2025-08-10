@@ -20,20 +20,41 @@ export const Main = () => {
     application.use(express.urlencoded({ extended: true }));
     application.use(express.json());
 
-    // CORS
+    // CORS - allow all origins (no credentials); switch to an allowlist if needed via CORS_ORIGIN
     const rawOrigins = process.env.CORS_ORIGIN; // comma-separated list or '*' for all
-    const origins = rawOrigins
-        ? rawOrigins.split(',').map((o) => o.trim())
-        : '*';
-
-    application.use(
-        cors({
-            origin: true, // Allow all origins for now
+    const hasAllowList = rawOrigins && rawOrigins.trim() !== '' && rawOrigins.trim() !== '*';
+    const corsOptions: any = hasAllowList
+        ? {
+            origin: rawOrigins.split(',').map((o) => o.trim()),
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
             credentials: false,
-        })
-    );
+            optionsSuccessStatus: 204,
+        }
+        : {
+            origin: '*',
+            methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization'],
+            credentials: false,
+            optionsSuccessStatus: 204,
+        };
+
+    // Debug: log configured CORS options once on startup
+    logging.log('CORS configuration', { rawOrigins, hasAllowList, corsOrigin: corsOptions.origin });
+
+    // Debug: log per-request origin and method
+    application.use((req, res, next) => {
+        const originHeader = req.headers.origin;
+        const acrm = req.headers['access-control-request-method'];
+        logging.log('CORS request', { method: req.method, url: req.originalUrl, originHeader, acrm });
+        res.on('finish', () => {
+            const allowOrigin = res.get('Access-Control-Allow-Origin');
+            logging.log('CORS response', { url: req.originalUrl, status: res.statusCode, allowOrigin });
+        });
+        next();
+    });
+
+    application.use(cors(corsOptions));
 
 
     // Serve static avatars whether running from src or build
