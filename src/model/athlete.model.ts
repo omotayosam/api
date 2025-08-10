@@ -32,11 +32,23 @@ export class AthleteModel {
             take: options?.take,
             orderBy: options?.orderBy || { athleteId: 'asc' }, // Fixed: use athleteId
             include: {
-                team: true,
-                position: true,
+                team: {
+                    include: {
+                        sport: true
+                    }
+                },
+                position: {
+                    include: {
+                        sport: true
+                    }
+                },
                 disciplines: {
                     include: {
-                        discipline: true
+                        discipline: {
+                            include: {
+                                sport: true
+                            }
+                        }
                     }
                 }
             }
@@ -51,11 +63,23 @@ export class AthleteModel {
         return prisma.athlete.findUnique({
             where: { athleteId: athleteId }, // Fixed: use athleteId
             include: {
-                team: true,
-                position: true,
+                team: {
+                    include: {
+                        sport: true
+                    }
+                },
+                position: {
+                    include: {
+                        sport: true
+                    }
+                },
                 disciplines: {
                     include: {
-                        discipline: true
+                        discipline: {
+                            include: {
+                                sport: true
+                            }
+                        }
                     }
                 }
             }

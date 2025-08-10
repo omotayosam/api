@@ -20,7 +20,9 @@ export const Main = () => {
     application.use(express.urlencoded({ extended: true }));
     application.use(express.json());
 
-    application.use('/avatars', express.static(path.join(__dirname, '../avatars')));
+    // Serve static avatars whether running from src or build
+    const avatarsPath = path.join(__dirname, '../avatars');
+    application.use('/avatars', express.static(avatarsPath));
 
     logging.log('----------------------------------------');
     logging.log('Logging & Configuration');
@@ -46,9 +48,10 @@ export const Main = () => {
     logging.log('Starting Server');
     logging.log('----------------------------------------');
     httpServer = http.createServer(application);
-    httpServer.listen(server.SERVER_PORT, () => {
+    const port = process.env.PORT ? Number(process.env.PORT) : server.SERVER_PORT;
+    httpServer.listen(port, () => {
         logging.log('----------------------------------------');
-        logging.log(`Server started on ${server.SERVER_HOSTNAME}:${server.SERVER_PORT}`);
+        logging.log(`Server started on ${server.SERVER_HOSTNAME}:${port}`);
         logging.log('----------------------------------------');
     });
 };

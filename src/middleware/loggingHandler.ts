@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 
 export function loggingHandler(req: Request, res: Response, next: NextFunction) {
-    logging.log(`Incomming - METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
+    const originalUrl = req.originalUrl || req.url;
+    const ip = req.socket.remoteAddress;
+
+    logging.log(`Incomming - METHOD: [${req.method}] - URL: [${originalUrl}] - IP: [${ip}]`);
 
     res.on('finish', () => {
-        logging.log(`Result - METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}] - STATUS: [${res.statusCode}]`);
+        logging.log(`Result - METHOD: [${req.method}] - URL: [${originalUrl}] - IP: [${ip}] - STATUS: [${res.statusCode}]`);
     });
 
     next();

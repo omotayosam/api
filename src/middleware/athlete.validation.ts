@@ -1,4 +1,5 @@
 import z from "zod";
+import { SportType } from "@prisma/client";
 
 export class AthleteValidation {
     createIndividualAthleteSchema = {
@@ -13,7 +14,7 @@ export class AthleteValidation {
             weight: z.number().optional(),
             bio: z.string().optional(),
             isActive: z.boolean().optional().default(true),
-            sportType: z.enum(['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'ATHLETICS', 'SWIMMING', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS', 'CHESS', 'SCRABBLE'] as const),
+            sportType: z.nativeEnum(SportType),
             disciplines: z.array(z.object({
                 code: z.string(),
                 currentRank: z.number().optional()
@@ -35,7 +36,7 @@ export class AthleteValidation {
             weight: z.number().optional(),
             bio: z.string().optional(),
             isActive: z.boolean().optional().default(true),
-            sportType: z.enum(['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'ATHLETICS', 'SWIMMING', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS', 'CHESS', 'SCRABBLE'] as const)
+            sportType: z.nativeEnum(SportType)
         }),
     };
 
@@ -51,7 +52,7 @@ export class AthleteValidation {
             weight: z.number().optional(),
             bio: z.string().optional(),
             isActive: z.boolean().optional(),
-            sportType: z.enum(['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'ATHLETICS', 'SWIMMING', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS', 'CHESS', 'SCRABBLE'] as const).optional(),
+            sportType: z.nativeEnum(SportType).optional(),
             teamCode: z.string().optional(),
             positionId: z.number().optional()
         }),
@@ -69,7 +70,7 @@ export class AthleteValidation {
             weight: z.number().optional(),
             bio: z.string().optional(),
             isActive: z.boolean().optional().default(true),
-            sportType: z.enum(['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'ATHLETICS', 'SWIMMING', 'TENNIS', 'BADMINTON', 'TABLE_TENNIS', 'CHESS', 'SCRABBLE'] as const).optional(),
+            sportType: z.nativeEnum(SportType).optional(),
             code: z.string().optional(),
             disciplines: z.array(z.object({
                 code: z.string(),
