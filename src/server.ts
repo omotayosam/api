@@ -20,6 +20,22 @@ export const Main = () => {
     application.use(express.urlencoded({ extended: true }));
     application.use(express.json());
 
+    // CORS
+    const rawOrigins = process.env.CORS_ORIGIN; // comma-separated list or '*' for all
+    const origins = rawOrigins
+        ? rawOrigins.split(',').map((o) => o.trim())
+        : '*';
+
+    application.use(
+        cors({
+            origin: origins,
+            methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization'],
+            credentials: false,
+        })
+    );
+    application.options('*', cors());
+
     // Serve static avatars whether running from src or build
     const avatarsPath = path.join(__dirname, '../avatars');
     application.use('/avatars', express.static(avatarsPath));
@@ -28,7 +44,6 @@ export const Main = () => {
     logging.log('Logging & Configuration');
     logging.log('----------------------------------------');
     application.use(loggingHandler);
-    application.use(cors());
 
     logging.log('----------------------------------------');
     logging.log('Define Controller Routing');
