@@ -1,12 +1,14 @@
-import { GoogleGenAI } from '@google/genai';
 import { Router } from 'express';
 
 const aiRoutes: Router = Router();
 
-// Initialize with your API key - make sure to set GEMINI_API_KEY in your environment
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY || '',
-});
+// Dynamic import for ES module
+async function createGenAI() {
+    const { GoogleGenAI } = await import('@google/genai');
+    return new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY || '',
+    });
+}
 
 aiRoutes.post('/chat', async (req, res) => {
     try {
@@ -15,6 +17,9 @@ aiRoutes.post('/chat', async (req, res) => {
         if (!process.env.GEMINI_API_KEY) {
             return res.status(500).json({ error: 'Gemini API key not configured' });
         }
+
+        // Create AI client using dynamic import
+        const ai = await createGenAI();
 
         // Convert message history to Gemini format
         let contents = [];

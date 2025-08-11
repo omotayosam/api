@@ -2,18 +2,13 @@ import http from 'http';
 import express from 'express';
 import './config/logging';
 import cors from 'cors';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+
 
 import { server } from './config/config';
 import { loggingHandler } from './middleware/loggingHandler';
 import { routeNotFound } from './middleware/routeNotFound';
 import path from 'path';
 import rootRouter from './routes/routes';
-
-// ES module equivalent of __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 export const application = express();
 export let httpServer: ReturnType<typeof http.createServer>;
@@ -60,6 +55,7 @@ export const Main = () => {
     });
 
     application.use(cors(corsOptions));
+
 
     // Serve static avatars whether running from src or build
     const avatarsPath = path.join(__dirname, '../avatars');
