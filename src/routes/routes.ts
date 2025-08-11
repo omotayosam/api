@@ -9,6 +9,7 @@ import venueRoutes from "./venue.route";
 import positionRoutes from "./position.route";
 import disciplineRoutes from "./discipline.route";
 import sportRoutes from "./sport.route";
+import aiRoutes from "./ai.route";
 
 
 const rootRouter: Router = Router()
@@ -24,5 +25,6 @@ rootRouter.use('/venues', venueRoutes)
 rootRouter.use('/positions', positionRoutes)
 rootRouter.use('/disciplines', disciplineRoutes)
 rootRouter.use('/sports', sportRoutes)
+rootRouter.use('/ai', aiRoutes)
 
 export default rootRouter
