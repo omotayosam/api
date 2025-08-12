@@ -1,6 +1,7 @@
 import { EventStatus, Gender, SportType } from "@prisma/client";
 import { AppError } from "../middleware/error";
 import { EventModel } from "../model/event.model";
+import { SportModel } from "../model/sport.model";
 
 // Define the Event type with relations to match what EventModel returns
 type EventWithRelations = {
@@ -36,9 +37,11 @@ type EventWithRelations = {
 
 export class EventService {
     private eventModel: EventModel;
+    private sportModel: SportModel;
 
     constructor() {
         this.eventModel = new EventModel();
+        this.sportModel = new SportModel();
     }
 
     async getAllEvents(filter?: {
@@ -143,6 +146,7 @@ export class EventService {
         name: string;
         code: string;
         sportId: number;
+        sportType?: any; // Add sportType to handle frontend data
         year: number;
         seasonId: number;
         gamedayId: number;
@@ -194,7 +198,38 @@ export class EventService {
                 }
             }
 
-            return await this.eventModel.update(id, data);
+            // Filter out eventId and other invalid fields from the data to prevent Prisma errors
+            const { eventId, sportType, createdAt, updatedAt, sport, season, gameday, venue, performances, ...updateData } = data as any;
+
+            // If sportType is provided, we need to convert it to sportId
+            if (data.sportType) {
+                try {
+                    // Find the sport by sportType to get the sportId
+                    const sport = await this.sportModel.findByName(data.sportType);
+                    if (sport) {
+                        updateData.sportId = sport.sportId;
+                    } else {
+                        throw new AppError(`Sport type ${data.sportType} not found`, 400);
+                    }
+                } catch (error) {
+                    if (error instanceof AppError) throw error;
+                    throw new AppError(`Failed to find sport type ${data.sportType}`, 400);
+                }
+            }
+
+            // Log the final update data for debugging
+            console.log('Original data received:', data);
+            console.log('Filtered update data:', updateData);
+
+            // Convert date strings to Date objects if they exist
+            if (updateData.startDate && typeof updateData.startDate === 'string') {
+                updateData.startDate = new Date(updateData.startDate);
+            }
+            if (updateData.endDate && typeof updateData.endDate === 'string') {
+                updateData.endDate = new Date(updateData.endDate);
+            }
+
+            return await this.eventModel.update(id, updateData);
         } catch (error) {
             if (error instanceof AppError) throw error;
             console.log(error);
